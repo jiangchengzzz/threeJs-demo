@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>three</title>
+    <script src="./three.min.js"></script>
+    <script src="./OrbitControls.js"></script>
+    <style>
+    body{
+        margin:0;
+        padding:0;
+        overflow: hidden;
+    }
+    #canvas3d {
+        margin: 50px;
+        padding: 50px;
+        background-color: aquamarine;
+    }
+    </style>
+</head>
+<body>
+    <div id="canvas3d"></div>
+<script>
+    var scene = new THREE.Scene();  // 场景scene
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000); // 相机camera
+    // three的相机有很多种，不同相机用作不同的用作，这边学习两种常用的相机。
+    // 1.perspectiveCamera 透视相机
+    var renderer = new THREE.WebGLRenderer(); // 渲染器
+    // 定义了一个webgl渲染器
+    
+    // renderer.setSize(window.innerWidth, window.innerHeight); // 设置渲染器大小setSize
+    renderer.setSize(500, 500); // 设置渲染器大小setSize
+    document.querySelector('#canvas3d').appendChild(renderer.domElement);
+
+
+    var geometry = new THREE.CubeGeometry(2,2,2);  // 表示创建一个几何体，x y z轴比例 1： 2 ： 1  cube几何体 geometry： 几何结构
+    var material = new THREE.MeshBasicMaterial({color: 'red'}); // 材质，表示制作我们立方体的材质，后期具体讲解
+    var cube = new THREE.Mesh(geometry, material); 
+    scene.add(cube);  // 将其添加到我们创建的场景中
+    camera.position.z = 3; // 表示我们放置的物体离我们视口的远近，类似于拍照时候镜头的拉远与靠近（实验猜测。后期会详细查看）
+    function render() {
+        requestAnimationFrame(render);
+        cube.rotation.x += 0.1;
+        cube.rotation.y += 0.1;
+        cube.rotateY(0.01)
+        renderer.render(scene, camera);
+    }
+    render();
+    var controls = new THREE.OrbitControls(camera);//创建控件对象
+    controls.addEventListener('change', render);//监听鼠标、键盘事件
+    
+</script>
+
+</body>
+</html>

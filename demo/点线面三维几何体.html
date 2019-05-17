@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>three</title>
+    <script src="./three.js"></script>
+    <script src="./OrbitControls.js"></script>
+    <style>
+    body{
+        margin:0;
+        padding:0;
+        overflow: hidden;
+    }
+    #canvas3d {
+        margin: 50px;
+        padding: 50px;
+        background-color: aquamarine;
+    }
+    </style>
+</head>
+<body>
+    <div id="canvas3d"></div>
+<script>
+    /**
+     * @Description: 定义场景
+     */
+    var scene;
+    function setScene() {
+        scene = new THREE.Scene();  // 场景scene
+    }
+    
+    /**
+     * @Description: 定义相机
+     */
+    var camera = new THREE.OrthographicCamera(); // 直接坐标系
+    function setCamera() {
+        var width = 400;//窗口宽度
+        var height = 400;//窗口高度
+        var k = width/height;//窗口宽高比
+        var s = 150;//三维场景缩放系数
+        camera = new THREE.OrthographicCamera(-s*k,s*k, s,-s,1,1000);
+        camera.position.set(200,300,200);//设置相机位置
+        camera.lookAt(scene.position);//设置相机方向(指向的场景对象)
+    }
+
+    /**
+     * @Description: 定义渲染器
+     */
+    var renderer;
+    function setRenderer() {
+        renderer = new THREE.WebGLRenderer(); // 渲染器
+        renderer.setClearColor(0xb9d3ff, 1.0);
+        renderer.setSize(600, 600); // 设置渲染器大小setSize
+        document.querySelector('#canvas3d').appendChild(renderer.domElement);
+    }
+
+    /**
+     * 光源设置
+     */
+     var point;
+    var ambient;
+    function pointSource(){
+        point=new THREE.PointLight(0xffffff);
+        point.position.set(400,200,300);//点光源位置
+        scene.add(point);//点光源添加到场景中
+        //环境光
+        ambient=new THREE.AmbientLight(0x444444);
+        scene.add(ambient);
+    }
+    
+    /**
+     * @Description: 渲染
+     */
+    function render() {
+        renderer.clear();
+        renderer.render(scene, camera);
+    }
+
+    /**
+     * @Description: 简单的鼠标与键盘操作，不涉及内部本身需要旋转视角的操作，还没学 
+     */
+    function handie() {
+        var controls = new THREE.OrbitControls(camera);//创建控件对象
+        controls.addEventListener('change', render);//监听鼠标、键盘事件
+    }
+
+    /**
+     * @Description: 画一条线
+     */
+    function setLine() {
+        var geometry = new THREE.Geometry();//声明一个空几何体对象
+        var p1 = new THREE.Vector3(200,100,0);//顶点1坐标
+        var p2 = new THREE.Vector3(200,200,0);//顶点2坐标
+        geometry.vertices.push(p1,p2); //顶点坐标添加到geometry对象
+
+        // 1. 可以通过定点颜色确定线条颜色
+        var color1 = new THREE.Color(0x00FF00)
+        var color2 = new THREE.Color(0xFF0000)
+        geometry.colors.push(color1, color2); // 顶点颜色传入几何体对象
+
+        var material=new THREE.LineBasicMaterial({
+            // color:0x0000ff // 2.直接设置线条颜色
+            vertexColors: THREE.VertexColors,//以顶点颜色为准
+        });//材质对象
+        var line=new THREE.Line(geometry,material);//线条模型对象
+        scene.add(line);//线条对象添加到场景中
+    } 
+
+    /**
+    * @Description: 画四个个点
+    */
+    function setPoint() {
+        var geometry = new THREE.Geometry();
+        var p1 = new THREE.Vector3(100, 280, 0);
+        var p2 = new THREE.Vector3(100, -130, 0);
+        var p3 = new THREE.Vector3(-100, 130, 0);
+        var p4 = new THREE.Vector3(-100, -280, 0);
+        geometry.vertices.push(p1, p2, p3, p4);
+        var material = new THREE.PointsMaterial({
+            color: 'red',
+            size: 20.0 // 设置尺寸
+        })
+        var points = new THREE.Points(geometry, material);
+        scene.add(points);
+    }
+
+    /**
+    * @Description: 创建网格模型三角形
+    */    
+    function setTriangle() {
+        var geometry = new THREE.Geometry();
+        var p1 = new THREE.Vector3(0, 0, 0);
+        var p2 = new THREE.Vector3(150, 0, 0);
+        var p3 = new THREE.Vector3(0, 150, 0);
+        geometry.vertices.push(p1, p2, p3);
+        var normal = new THREE.Vector3(0,0,1);
+        var face = new THREE.Face3( 0, 1, 2, normal);
+        geometry.faces.push(face)
+        var material = new THREE.MeshLambertMaterial({
+            color: 0x0000ff,
+            side: THREE.DoubleSide // 两面可见
+        })
+        var mesh = new THREE.Mesh(geometry,material);
+        scene.add(mesh)
+    }
+
+    /**
+    * @Description: 创建一个正方形
+    */    
+    function setSquare() {
+        var geometry = new THREE.Geometry();
+        var p1 = new THREE.Vector3(0, 0, 120);
+        var p2 = new THREE.Vector3(150, 0, 120);
+        var p3 = new THREE.Vector3(150, 150, 120);
+        var p4 = new THREE.Vector3(0, 150, 120);
+        geometry.vertices.push(p1, p2, p3, p4);
+
+        var color1 = new THREE.Color(0xFF0000);
+        var color2 = new THREE.Color(0x00FF00);
+        var color3 = new THREE.Color(0xFF00FF);
+
+        var normal = new THREE.Vector3(0,0,1);
+        var face = new THREE.Face3( 0, 1, 2, normal);
+        var face1 = new THREE.Face3( 0, 2, 3, normal);
+
+        face.vertexColors.push(color1, color2,color3) // 设置顶点颜色
+        face1.vertexColors.push(color1, color2, color3)
+        geometry.faces.push(face, face1)
+        var material = new THREE.MeshLambertMaterial({
+            // color: 0x0000ff, // 不知道为啥材质颜色不起作用了
+
+            vertexColors: THREE.VertexColors,// 以顶点颜色为准， 然后还是没做用啊啊啊啊啊，研究了一点时间也没发现为啥，后来再看吧
+            side: THREE.DoubleSide // 两面可见
+        })
+        var mesh = new THREE.Mesh(geometry,material);
+        scene.add(mesh)
+    }
+
+
+    // 下面是网格模型中的   BoxGeometry（长方体构造函数）
+    // BoxGeometry(width, height, depth, widthSegments, heightSegments, depthSegments)
+    /**
+    * @Description: 创建网格模型 本质上还是通过点线面链接而成，只是three帮我们封装了这个过程
+    */    
+    function setGrid() {
+        var box=new THREE.BoxGeometry(100,100,100);
+        var material=new THREE.MeshLambertMaterial({color:0x0000ff});//材质对象
+        var mesh=new THREE.Mesh(box,material);//网格模型对象
+        scene.add(mesh);//网格模型添加到场景中
+    }
+
+    /**
+     * @Description: 利用求体构造函数SphereGeometry创建一个球体
+     * SphereGeometry(radius : Float, widthSegments : Integer, heightSegments : Integer, phiStart : Float, phiLength : Float, thetaStart : Float, thetaLength : Float)
+     */
+    function setSphere() {
+        var sphere=new THREE.SphereGeometry(60,40,40,50,50,50,100);// 创建一个球体几何对象
+        var sphereMaterial=new THREE.MeshLambertMaterial({color:0xff0000});// 材质对象
+        var sphereMesh=new THREE.Mesh(sphere,sphereMaterial);// 网格模型对象
+        // sphereMesh.translateY(100);// 球体网格模型沿Y轴正方向平移100
+        scene.add(sphereMesh);// 网格模型添加到场景中
+    }
+
+    /**
+     * @Description: 利用CylinderGeometry创建一个圆柱体
+     * CylinderGeometry(radiusTop : Float, radiusBottom : Float, height : Float, radialSegments : Integer, heightSegments : Integer, openEnded : Boolean, thetaStart : Float, thetaLength : Float)
+     */
+     function setCylinder() {
+        // var cylinder= new THREE.CylinderGeometry(20,80,150,40,40,false,true,50);
+        var cylinder= new THREE.CylinderGeometry(80,80,100,40);
+        var cylinderMaterial=new THREE.MeshLambertMaterial({color:0xff0000});
+        var cylinderMesh=new THREE.Mesh(cylinder,cylinderMaterial);
+        // cylinderMesh.translateY(100);
+        scene.add(cylinderMesh);
+    }
+
+    /**
+    * @Description: 利用PolyhedronGeometry创建多面体
+    * PolyhedronGeometry(vertices : Array, indices : Array, radius : Float, detail : Integer)
+    * 注意detail参数，此属性定义给多面体添加哪种额外细节。取值范围是大于等于 0。当设为 0 时，多面体的每一个面都不会有任何细节；为 1 时，每一个面多将再次分成 4 个小三角形表示；为 2 时，再次分隔的每一个面又会继续分成 4 个小三角形，，，
+    */ 
+    function setPolyhedron() {
+        // // 顶点数组
+        // var vertices = [ 
+        //     -1,-1,-1,    1,-1,-1,    1, 1,-1,    -1, 1,-1,
+        //     -1,-1, 1,    1,-1, 1,    1, 1, 1,    -1, 1, 1,
+        // ];
+        // //立方体顶点索引，三个顶点定义一个三角面
+        // var indices = [
+        //     2,1,0,    0,3,2,
+        //     0,4,7,    7,3,0,
+        //     0,1,5,    5,4,0,
+        //     1,2,6,    6,5,1,
+        //     2,3,7,    7,6,2,
+        //     4,5,6,    6,7,4
+        // ];
+
+        // 顶点数组
+        var vertices = [ 
+            0,0,1,   1,0,1,  0,1,1,  -1,0,1,    0,-1,1,
+            0,0,0,  1,0,0, 0,1,0, -1,0,0,   0,-1,0,
+        ];
+        //立方体顶点索引，三个顶点定义一个三角面  ,,,
+        // 注意indices中形成一个面的三个点是由一定顺序的，具体以后再补充     !!!!!!!!!!    啊啊啊啊已经确定这是共和蠢想法，往下看
+        // 气疯了，那天花费那么多时间研究出indices确定面会和的顺序有关，今天多学了点， 为什么会产生有些面只能从某一个面看到这种现象？
+        // 是法向量与光照的原因，每个面都有个法向量，根据回忆大学的知识，每个面都有法向量，当法向量的方向与光照方向一致时，是没有反射光线的，所以这时候这个面时看不到的，只有法向量的方向和光照方向不一致才能看见，，，，嗯根据右手定则。。。。。。。。。。。。。。其他的忘记了，这部分时我自己回忆以前知识想到的哦，，后期如果发现我的想法错误，再来更正
+        var indices = [
+            0,4,1,   1,2,0, 0,2,3,  3, 4, 0,
+            5,1,4,   4,3,5, 5,3,2,  5, 2, 1,
+        ];
+        var polyhedron = new THREE.PolyhedronGeometry(vertices,indices,80, 0); // 嗯测试了我的浏览器到9崩溃
+
+        var polyhedronMaterial=new THREE.MeshLambertMaterial({
+            color: 0xff0000,
+            side: THREE.DoubleSide,
+        });
+        var polyhedronMesh=new THREE.Mesh(polyhedron,polyhedronMaterial);
+        scene.add(polyhedronMesh);
+    }
+
+    /**
+    * @Description: 矩形平面
+    * PlaneGeometry(width : Float, height : Float, widthSegments : Integer, heightSegments : Integer)
+    */
+    function setRectangle() {
+        var rectangle = new THREE.PlaneGeometry(50,80);
+        var material = new THREE.MeshLambertMaterial({
+            color: 'green',
+            side: THREE.DoubleSide,
+        })
+        var plane = new THREE.Mesh( rectangle, material );
+        scene.add(plane);
+    }
+
+    /**
+    * @Description: 圆平面
+    * CircleGeometry(radius : Float, segments : Integer, thetaStart : Float, thetaLength : Float)
+    */
+    function setCircle() {
+        var circle = new THREE.CircleGeometry(50,10,0, 0.8*Math.PI);   
+        var material = new THREE.MeshLambertMaterial({
+            color: 'red',
+            side: THREE.DoubleSide,
+        })
+        var plane = new THREE.Mesh( circle, material );
+        scene.add(plane);
+    }
+
+    setScene();
+    setCamera();
+    setRenderer(); 
+    pointSource();
+    // setLine();
+    // setPoint();
+    // setTriangle();
+    // setSquare();
+    // setGrid();
+    // setSphere();
+    // setCylinder();
+    // setPolyhedron();
+    // setRectangle();
+    setCircle();
+    render();
+    handie();
+
+    
+    
+    
+</script>
+
+</body>
+</html>
