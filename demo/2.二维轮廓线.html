@@ -53,7 +53,7 @@
     function setRenderer() {
         renderer = new THREE.WebGLRenderer(); // 渲染器
         renderer.setClearColor(0xb9d3ff, 1.0);
-        renderer.setSize(600, 600); // 设置渲染器大小setSize
+        renderer.setSize(500, 500); // 设置渲染器大小setSize
         document.querySelector('#canvas3d').appendChild(renderer.domElement);
     }
 
@@ -138,7 +138,12 @@
     }
 
 
+
     // ExtrudeGeometry（）和SHapeGeometry（）一样是利用shape对象生成集合体对象，区别在于ExtrudeGeometry()可是利用2D轮廓生成3D模型， 如果你使用任何三维软件都知道可以先绘制一个二维的轮廓图，然后拉伸成型得到三维模型
+    /**
+     * @Description: 拉伸成型
+     * ExtrudeGeometry(shapes : Array, options : Object)
+     */
     function extrudeGeometry() {
         var length = 50, width = 150;
         var shape = new THREE.Shape();
@@ -185,6 +190,128 @@
         scene.add(mesh);
     }
 
+    /**
+     * @Description: 创建扫描网路模型,,同样是用EXtrudeGeometry() 只是不需要amunt这个拉伸长度，，而加上extrudePath这个轨迹
+     */
+    function setScan() {
+        var shape = new THREE.Shape();
+        // 创建一个矩形
+        shape.moveTo(0, 0);
+        shape.lineTo(0, 10);
+        shape.lineTo(10, 10);
+        shape.lineTo(10, 0);
+        shape.lineTo(0, 0);
+        // 创建轮廓的扫描轨迹(3D样条曲线)
+        var curve = new THREE.SplineCurve3([
+            new THREE.Vector3( -10, -50, -50 ),
+            new THREE.Vector3( 10, 0, 0 ),
+            new THREE.Vector3( 8, 50, 50 ),
+            new THREE.Vector3( -5, 0, 100 ),
+
+            new THREE.Vector3( 30, 0, 0 ),
+            new THREE.Vector3( 50, 50, 50 ),
+        ])
+        var geometry = new THREE.ExtrudeGeometry(
+            shape,
+            {
+                bevelEnabled: false, // 无倒角
+                extrudePath: curve, // 选择扫描轨迹
+                steps: 50 // 扫描方向细分数
+            }
+        )
+        var material = new THREE.MeshPhongMaterial({
+            color: 'red',
+        })
+        var mesh = new THREE.Mesh( geometry, material );
+        scene.add(mesh)
+    }
+
+    /**
+     * @Description: 曲线生成管道
+     * 类似于圆形截面电线、软管等呈现样条状的几何体，对于这些几何体可以通过管道构造函数TubeGeometry()，3D样条曲线作为参数实现，它的本质就是以3D样条为基准，生成一系列环绕样条曲线等径分布的顶点数据
+     * TubeGeometry(path : Curve, tubularSegments : Integer, radius : Float, radialSegments : Integer, closed : Boolean)
+     */
+    function setTube() {
+        // 创建轮廓的扫描轨迹(3D样条曲线)
+        var path = new THREE.SplineCurve3([
+            new THREE.Vector3( -10, -50, -50 ),
+            new THREE.Vector3( 10, 0, 0 ),
+            new THREE.Vector3( 8, 50, 50 ),
+            new THREE.Vector3( -5, 0, 100 ),
+            new THREE.Vector3( 30, 0, 0 ),
+            new THREE.Vector3( 50, 50, 50 ),
+        ]);
+        var geometry = new THREE.TubeGeometry( path, 80, 8, 8, false ); 
+        // path:                扫描路径，基本类是Curve的路径构造函数
+        // tubularSegments:     路径方向细分数，默认64
+        // radius:              管道半径，默认1
+        // radiusSegments:      管道圆弧细分数，默认8
+        // closed:              Boolean值，管道是否闭合
+        var material = new THREE.MeshPhongMaterial({
+            color: 'red',
+            side:THREE.DoubleSide, // 两面可见
+        })
+        var mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+    }
+
+
+    // 参数化曲面： 参数化曲面简单的说就是数学函数插值计算后生成一个曲面的顶点数据，这需要借助构造函数ParametricGeometry()实现，立方体、球体等规则几何体都是该构造函数的进一步分装， SphereGeometry构造函数封装了球体顶点数据生成的算法，使用ParametricGeometry()的时候相当于自己写几何体顶点生成算法。
+    /**
+     * @Description: ParametricGeometry(func, slices, stacks)
+     */
+    
+    // 现在有点问题，没有报错但是没有渲染出来，以后再看
+    function setParamsFace() {
+        function plane(u,v) {
+            var k = 100;//x、y取值范围
+            var a = 0.2;//旋转抛物面焦点
+            var x = (u-0.5)*k;
+            var y = (v-0.5)*k;
+            var z = Math.pow(a,2)*(Math.pow(x,2)+Math.pow(y,2));
+            return new THREE.Vector3(x,y,z)
+        }
+        var geometry = new THREE.ParametricGeometry(25, 25, plane);
+        var material = new THREE.MeshPhongMaterial({
+            color: 0x0000ff,
+            side: THREE.DoubleSide
+        });
+        material.wireframe = true; //线条模式渲染(查看细分数)
+        var mesh = new THREE.Mesh(geometry,material);
+        scene.add(mesh);
+    }
+
+    // 旋转造型 大概就是我们画一个轮廓，然后围绕一个轴转动
+    /**
+     * @Description: LatheGeometry() LatheGeometry可以利用已有的二维数据生成三维顶点数据，二维数据可以通过Vector2自定义，也可以通过3D曲线或2D线条轮廓生成。 LatheGeometry的二维坐标数据默认绕y轴旋转。
+     * LatheGeometry(points, segments, phiStart, phiLength)
+     */
+    function setRotateMesh() {
+        var points = [
+            new THREE.Vector2(50, 60),
+            new THREE.Vector2(25, 0),
+            new THREE.Vector2(50, -60),
+        ]
+        
+
+        // 进行样条插值计算，从而的到光滑旋转曲面
+        var shape = new THREE.Shape();
+        shape.splineThru(points) //顶点带入样条插值计算函数
+        var splinePoints = shape.getPoints(20) // 插值计算细分数20
+
+        // points:      Vector2表示的坐标数据组成的数组
+        // segments:    圆周方向细分数，默认12
+        // phiStart:    开始角度,默认0
+        // phiLength:   旋转角度，默认2π
+        var geometry = new THREE.LatheGeometry(splinePoints,30);
+        var material = new THREE.MeshPhongMaterial({
+            color: 'red',
+            side: THREE.DoubleSide,
+        })
+        material.wirefarame = true;
+        var mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+    }
     setScene();
     setCamera();
     setRenderer(); 
@@ -192,13 +319,13 @@
     // setPointRender();
     // setLineRender();
     // setFaceRender();
-    extrudeGeometry();
+    // extrudeGeometry();
+    // setScan();
+    // setTube();
+    // setParamsFace();
+    setRotateMesh();
     render();
     handie();
-
-    
-    
-    
 </script>
 
 </body>
